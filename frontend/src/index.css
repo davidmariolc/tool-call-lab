@@ -1,0 +1,125 @@
+@import "./design/system.css";
+@import "./design/motion.css";
+
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-mono.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/instrument-sans.woff2") format("woff2");
+}
+:root {
+  --p-bg: #e8e8e3;
+  --p-surface: #dcdcd6;
+  --p-ink: #181715;
+  --p-muted: #5c5b56;
+  --p-accent: #bfb21a;
+  --p-accent-ink: #181715;
+  --p-action: #181715;
+  --p-action-ink: #e8e8e3;
+  --p-inv-bg: #181715;
+  --p-inv-surface: #242321;
+  --p-inv-ink: #e8e8e3;
+  --p-inv-muted: #91908d;
+  --p-inv-accent: #bfb21a;
+  --p-inv-accent-ink: #181715;
+  --p-inv-action: #bfb21a;
+  --p-inv-action-ink: #181715;
+  --font-display: "Instrument Sans", system-ui, sans-serif;
+  --font-text: "Instrument Sans", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --display-weight: 500;
+  --display-tracking: -0.028em;
+  --display-tracking-xl: -0.036em;
+  --display-stretch: 96%;
+  --ly-scale: 1.04;
+  --app-paper: color-mix(in srgb, var(--p-bg) 28%, white);
+  --app-sidebar: color-mix(in srgb, var(--p-bg) 80%, white);
+  --app-line: color-mix(in srgb, var(--p-ink) 12%, transparent);
+  --app-muted: var(--p-muted);
+  font-family: var(--font-text);
+  color: var(--p-ink);
+  background: var(--app-sidebar);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+}
+body {
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.5;
+  background: var(--app-sidebar);
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  color: inherit;
+}
+button:disabled {
+  cursor: default;
+}
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--p-action);
+  outline-offset: 4px;
+}
+button {
+  -webkit-appearance: none;
+}
+button svg {
+  flex-shrink: 0;
+}
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+::selection {
+  background: color-mix(in srgb, var(--p-accent) 45%, white);
+  color: var(--p-ink);
+}

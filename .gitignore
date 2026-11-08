@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+/.agents/
+/fastapi/.ruff_cache/
+/frontend/.agents/
+/frontend/.taste-skill/*
+!/frontend/.taste-skill/plan.md
+!/frontend/.taste-skill/verification.md
