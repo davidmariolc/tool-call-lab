@@ -21,6 +21,7 @@ const note = {
 };
 beforeEach(() => {
   localStorage.clear();
+  vi.stubEnv("VITE_ASSISTANT_URL", undefined);
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue(Response.json({ response: reply, data: [], tools_used: [] })),
@@ -29,6 +30,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 test("starts with an empty composer and loads editable tool examples", async () => {
@@ -163,7 +165,7 @@ test("renders multiple tool cards alongside the explanation and restores them fr
     "1200",
   );
   expect(fetch).toHaveBeenCalledWith(
-    "/api/v1/assistant/assistant",
+    "/api/v1/assistant/chat",
     expect.objectContaining({
       method: "POST",
       body: JSON.stringify({ prompt: "Busca Ica y calcula 150 * 8" }),

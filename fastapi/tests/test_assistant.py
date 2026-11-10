@@ -67,7 +67,7 @@ class AssistantTests(unittest.TestCase):
         with patch.object(assistant_module, "OpenAI", return_value=sdk):
             with TestClient(app) as client:
                 response = client.post(
-                    "/api/v1/assistant/assistant", json={"prompt": "Mi consulta"}
+                    "/api/v1/assistant/chat", json={"prompt": "Mi consulta"}
                 )
         return response, requests
 

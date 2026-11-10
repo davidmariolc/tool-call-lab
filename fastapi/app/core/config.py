@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     )
 
     GROQ_API_KEY: str
+    FRONTEND_URL: str = "http://localhost:5173"
 
     PROJECT_NAME: str = "Vercel + FastAPI"
     VERSION: str = "1.0.0"

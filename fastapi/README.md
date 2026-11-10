@@ -2,6 +2,8 @@
 
 Deploy your [FastAPI](https://fastapi.tiangolo.com/) project to Vercel with zero configuration.
 
+This backend serves a REST API only. The frontend lives in `../frontend`.
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/vercel/tree/main/examples/fastapi&template=fastapi)
 
 _Live Example: https://vercel-plus-fastapi.vercel.app/_
@@ -16,8 +18,6 @@ This example follows the [larger applications](https://fastapi.tiangolo.com/tuto
 app/
 ├── __init__.py
 ├── main.py              # FastAPI application entry point
-├── templates/
-│   └── index.html       # Landing page template
 ├── api/
 │   ├── __init__.py
 │   ├── main.py          # API router assembly
@@ -48,11 +48,10 @@ vercel dev
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/` | Landing page |
 | `GET` | `/api/v1/items/` | List sample items |
 | `GET` | `/api/v1/items/{item_id}` | Get item by ID |
 | `GET` | `/docs` | Interactive API docs (Swagger UI) |
-| `POST` | `/api/v1/assistant/assistant` | Hybrid assistant response: text and typed tool results |
+| `POST` | `/api/v1/assistant/chat` | Hybrid assistant response: text and typed tool results |
 
 The assistant accepts `{ "prompt": "..." }`. Configure `GROQ_API_KEY` in
 `.env.local`. Its response preserves the `response` text field and adds `data`,

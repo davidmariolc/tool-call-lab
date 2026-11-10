@@ -78,7 +78,7 @@ export function isAssistantData(value: unknown): value is AssistantData {
 }
 
 export async function askAssistant(prompt: string) {
-  const result = await fetch(import.meta.env.VITE_ASSISTANT_URL ?? "/api/v1/assistant/assistant", {
+  const result = await fetch(import.meta.env.VITE_ASSISTANT_URL ?? "/api/v1/assistant/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),

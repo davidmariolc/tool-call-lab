@@ -29,7 +29,7 @@ class AssistantRequest(BaseModel):
     prompt: str = Field(min_length=1)
 
 
-@router.post("/assistant", response_model=AssistantResponse)
+@router.post("/chat", response_model=AssistantResponse)
 def assistant(request: AssistantRequest) -> AssistantResponse:
     client = OpenAI(
         base_url="https://api.groq.com/openai/v1",

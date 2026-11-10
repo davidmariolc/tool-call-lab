@@ -93,7 +93,7 @@ See the [Vite+ guide](https://viteplus.dev/guide) and
 
 ## Assistant response contract
 
-`POST /api/v1/assistant/assistant` accepts `{ "prompt": "..." }` and returns:
+`POST /api/v1/assistant/chat` accepts `{ "prompt": "..." }` and returns:
 
 ```json
 {
