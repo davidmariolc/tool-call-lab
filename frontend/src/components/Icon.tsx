@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 
 const paths = {
+  calculator: "M5 3h14v18H5V3Zm3 3h8v4H8V6Zm0 8h1m6 0h1m-8 4h1m6 0h1",
+  sun: "M12 3V1m0 22v-2M3 12H1m22 0h-2M4.2 4.2l1.4 1.4m12.8 12.8 1.4 1.4m0-15.6-1.4 1.4M5.6 18.4l-1.4 1.4M17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0",
   plus: "M12 5v14M5 12h14",
   search: "M21 21l-4.5-4.5M19 10.5a8.5 8.5 0 1 1-17 0 8.5 8.5 0 0 1 17 0",
   panel: "M8 3v18M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1",

@@ -1,0 +1,140 @@
+.assistant-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.result-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--p-bg);
+  overflow-wrap: anywhere;
+}
+.result-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--p-muted);
+}
+.result-card-heading svg {
+  flex-shrink: 0;
+}
+.result-card h3,
+.result-card h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--p-ink);
+}
+.result-count,
+.result-weather-label {
+  margin-left: auto;
+  font-size: 12px;
+}
+.result-count {
+  padding: 1px 8px;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+.result-notes {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+.result-notes li + li {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-line);
+}
+.message-body .result-notes p,
+.message-body .result-empty {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.result-notes time {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--p-muted);
+}
+.result-calculation {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.result-calculation code {
+  font-size: 16px;
+  white-space: pre-wrap;
+}
+.result-calculation output {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.result-temperature {
+  margin: 20px 0;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+.result-temperature > span {
+  margin-left: 6px;
+  font-size: 24px;
+  color: var(--p-muted);
+  letter-spacing: 0;
+}
+.result-weather-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 36px;
+  margin: 0;
+}
+.result-weather-details dt {
+  font-size: 12px;
+  color: var(--p-muted);
+}
+.result-weather-details dd {
+  margin: 4px 0 0;
+  font-size: 16px;
+}
+.result-weather-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-line);
+  color: var(--p-muted);
+  font-size: 12px;
+}
+.result-weather-footer a {
+  color: var(--p-ink);
+  text-underline-offset: 3px;
+}
+.result-weather-footer a:hover {
+  text-decoration-thickness: 2px;
+}
+.result-card--error {
+  border-style: dashed;
+}
+@media (max-width: 480px) {
+  .result-card {
+    padding: 16px;
+  }
+  .result-card-heading {
+    flex-wrap: wrap;
+  }
+  .result-weather-label {
+    width: 100%;
+    margin-left: 26px;
+  }
+}

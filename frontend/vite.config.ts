@@ -3,6 +3,11 @@ import { defineConfig, lazyPlugins } from "vite-plus";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/api": "http://127.0.0.1:5001",
+    },
+  },
   fmt: {
     ignorePatterns: [".agents/**", ".taste-skill/**", "src/design/**"],
   },

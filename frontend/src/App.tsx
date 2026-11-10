@@ -1,97 +1,52 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { Icon, Mark, type IconName } from "./components/Icon";
+import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
+import { AssistantCards } from "./components/AssistantCards";
+import {
+  askAssistant,
+  isAssistantData,
+  isRecord,
+  parseToolsUsed,
+  type AssistantData,
+} from "./lib/assistant";
 import "./App.css";
 
-type Attachment = { name: string; content: string };
-type Message = { id: string; role: "user" | "assistant"; text: string; files?: string[] };
-type Conversation = { id: string; title: string; messages: Message[] };
-type Intent = "Escribir" | "Crear ideas" | "Aprender" | "Programar";
-const storageKey = "asistente.conversations.v1";
-const intents: { label: Intent; icon: IconName }[] = [
-  { label: "Escribir", icon: "write" },
-  { label: "Crear ideas", icon: "idea" },
-  { label: "Aprender", icon: "book" },
-  { label: "Programar", icon: "code" },
-];
-const suggestions: Record<Intent, { title: string; description: string; prompt: string }[]> = {
-  Escribir: [
-    {
-      title: "Encuentra las palabras",
-      description: "Dale forma a ese correo pendiente.",
-      prompt: "Ayúdame a redactar un correo claro y cercano para ",
-    },
-    {
-      title: "Dale una segunda mirada",
-      description: "Un texto más claro, con tu voz.",
-      prompt: "Revisa este texto para mejorar su claridad sin cambiar mi tono:\n\n",
-    },
-    {
-      title: "Empieza por un borrador",
-      description: "De una idea suelta a una primera versión.",
-      prompt: "Quiero escribir sobre esta idea. Ayúdame con un primer borrador:\n\n",
-    },
-  ],
-  "Crear ideas": [
-    {
-      title: "Mira desde otro ángulo",
-      description: "Encuentra alternativas para tu proyecto.",
-      prompt: "Propón cinco enfoques diferentes para este proyecto: ",
-    },
-    {
-      title: "Ordena tus ideas",
-      description: "Convierte tus notas en un plan.",
-      prompt: "Organiza estas ideas en un plan con próximos pasos:\n\n",
-    },
-    {
-      title: "Haz las preguntas correctas",
-      description: "Descubre lo que aún falta por pensar.",
-      prompt: "Hazme preguntas que me ayuden a desarrollar esta idea: ",
-    },
-  ],
-  Aprender: [
-    {
-      title: "Entiende lo esencial",
-      description: "Un tema nuevo, explicado con claridad.",
-      prompt: "Explícame con ejemplos sencillos este tema: ",
-    },
-    {
-      title: "Aprende a tu ritmo",
-      description: "Traza una ruta para seguir aprendiendo.",
-      prompt: "Ayúdame a crear un plan para aprender ",
-    },
-    {
-      title: "Ponlo en práctica",
-      description: "Comprueba lo que has aprendido.",
-      prompt: "Prepara preguntas de práctica sobre ",
-    },
-  ],
-  Programar: [
-    {
-      title: "Desbloquea tu código",
-      description: "Revisa un error paso a paso.",
-      prompt: "Ayúdame a entender y resolver este error:\n\n",
-    },
-    {
-      title: "Construye algo nuevo",
-      description: "Empieza con una estructura clara.",
-      prompt: "Quiero desarrollar esta funcionalidad. Ayúdame a planificarla: ",
-    },
-    {
-      title: "Entiende cómo funciona",
-      description: "Lee el código con otra perspectiva.",
-      prompt: "Explícame qué hace este código y cómo podría mejorarlo:\n\n",
-    },
-  ],
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  files?: string[];
+  data?: AssistantData[];
+  toolsUsed?: string[];
+  error?: boolean;
 };
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+type Conversation = { id: string; title: string; messages: Message[] };
+const storageKey = "asistente.conversations.v1";
+const suggestions = [
+  {
+    tool: "calculate",
+    title: "Hacer un cálculo",
+    description: "Resuelve operaciones matemáticas.",
+    prompt: "Calcula 150 * 8",
+  },
+  {
+    tool: "get_weather",
+    title: "Consultar el clima",
+    description: "Consulta el clima actual de una ciudad.",
+    prompt: "¿Cuál es el clima actual en Ica?",
+  },
+  {
+    tool: "search_notes",
+    title: "Buscar notas",
+    description: "Encuentra notas por título o contenido.",
+    prompt: "Busca notas sobre Ica",
+  },
+];
 function loadConversations(): Conversation[] {
   try {
     const value: unknown = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
     if (!Array.isArray(value)) return [];
-    return value.filter(
+    const conversations = value.filter(
       (item): item is Conversation =>
         isRecord(item) &&
         typeof item.id === "string" &&
@@ -108,19 +63,23 @@ function loadConversations(): Conversation[] {
                 message.files.every((file: unknown) => typeof file === "string"))),
         ),
     );
+    return conversations.map((conversation) => ({
+      ...conversation,
+      messages: conversation.messages.map((message) => ({
+        ...message,
+        data: Array.isArray(message.data) ? message.data.filter(isAssistantData) : [],
+        toolsUsed: parseToolsUsed(message.toolsUsed),
+        error: message.error === true,
+      })),
+    }));
   } catch {
     return [];
   }
 }
-const previewResponse =
-  "Tu mensaje está listo. Esta es una vista previa de la conversación: todavía no hay un modelo de IA conectado.\n\nPuedes probar el editor, adjuntar notas y organizar tus conversaciones. Cuando conectemos el asistente, sus respuestas aparecerán aquí.";
-
 function App() {
   const [conversations, setConversations] = useState(loadConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [intent, setIntent] = useState<Intent>("Escribir");
-  const [files, setFiles] = useState<Attachment[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modal, setModal] = useState<"search" | "preferences" | "about" | null>(null);
   const [search, setSearch] = useState("");
@@ -133,8 +92,9 @@ function App() {
   });
   const [notice, setNotice] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const sending = useRef(false);
   const textarea = useRef<HTMLTextAreaElement>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const messageEnd = useRef<HTMLDivElement>(null);
   const active = conversations.find((item) => item.id === activeId);
   const visibleConversations = conversations.filter((item) =>
@@ -176,7 +136,7 @@ function App() {
   }, [draft]);
   useEffect(() => {
     messageEnd.current?.scrollIntoView?.({ behavior: "instant", block: "end" });
-  }, [active]);
+  }, [active, pendingId]);
   useEffect(() => {
     if (!copiedId) return;
     const timeout = window.setTimeout(() => setCopiedId(null), 2000);
@@ -186,7 +146,6 @@ function App() {
   function newConversation() {
     setActiveId(null);
     setDraft("");
-    setFiles([]);
     setSidebarOpen(false);
     setNotice("");
     textarea.current?.focus();
@@ -194,19 +153,16 @@ function App() {
   function openConversation(id: string) {
     setActiveId(id);
     setDraft("");
-    setFiles([]);
     setModal(null);
     setSidebarOpen(false);
   }
-  function send(event?: FormEvent) {
+  async function send(event?: FormEvent) {
     event?.preventDefault();
     const text = draft.trim();
-    if (!text) return;
+    if (!text || sending.current) return;
+    sending.current = true;
     const id = activeId ?? crypto.randomUUID();
-    const messages: Message[] = [
-      { id: crypto.randomUUID(), role: "user", text, files: files.map((file) => file.name) },
-      { id: crypto.randomUUID(), role: "assistant", text: previewResponse },
-    ];
+    const messages: Message[] = [{ id: crypto.randomUUID(), role: "user", text }];
     setConversations((current) => {
       const existing = current.find((item) => item.id === id);
       const conversation = existing
@@ -215,33 +171,50 @@ function App() {
       return [conversation, ...current.filter((item) => item.id !== id)];
     });
     setActiveId(id);
+    setPendingId(id);
     setDraft("");
-    setFiles([]);
     setNotice("");
     textarea.current?.focus();
+    try {
+      const result = await askAssistant(text);
+      const reply: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: result.response,
+        data: result.data,
+        toolsUsed: result.toolsUsed,
+      };
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === id
+            ? { ...conversation, messages: [...conversation.messages, reply] }
+            : conversation,
+        ),
+      );
+    } catch {
+      const reply: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: "No se pudo obtener una respuesta. Inténtalo nuevamente.",
+        error: true,
+      };
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === id
+            ? { ...conversation, messages: [...conversation.messages, reply] }
+            : conversation,
+        ),
+      );
+    } finally {
+      sending.current = false;
+      setPendingId(null);
+    }
   }
   function onEditorKey(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      send();
+      void send();
     }
-  }
-  async function attach(selected: FileList | null) {
-    if (!selected) return;
-    const incoming: Attachment[] = [];
-    for (const file of Array.from(selected)) {
-      if (!/\.(txt|md)$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
-        setNotice("Adjunta archivos .txt o .md de hasta 2 MB.");
-        continue;
-      }
-      try {
-        incoming.push({ name: file.name, content: await file.text() });
-      } catch {
-        setNotice(`No se pudo leer ${file.name}.`);
-      }
-    }
-    setFiles((current) => [...current, ...incoming].slice(0, 3));
-    if (fileInput.current) fileInput.current.value = "";
   }
   async function copyMessage(message: Message) {
     try {
@@ -375,7 +348,7 @@ function App() {
           <div className="header-actions">
             <button type="button" className="preview-badge" onClick={() => setModal("about")}>
               <span />
-              Vista previa
+              Colly
             </button>
             <button
               type="button"
@@ -403,11 +376,29 @@ function App() {
                   <div className="message-body">
                     <div className="message-author">
                       {message.role === "assistant" ? "Asistente" : "Tú"}
-                      {message.role === "assistant" ? (
-                        <span className="message-preview">Vista previa</span>
-                      ) : null}
                     </div>
+                    {message.role === "assistant" && !message.error ? (
+                      <div className="message-tools" aria-label="Uso de herramientas">
+                        {message.toolsUsed === undefined ? (
+                          <span>Uso de tools no registrado</span>
+                        ) : message.toolsUsed.length ? (
+                          <>
+                            <span>
+                              {message.toolsUsed.length === 1 ? "Tool usada:" : "Tools usadas:"}
+                            </span>
+                            {message.toolsUsed.map((name) => (
+                              <code key={name}>{name}</code>
+                            ))}
+                          </>
+                        ) : (
+                          <span>Sin tools · Respuesta directa</span>
+                        )}
+                      </div>
+                    ) : null}
                     <p>{message.text}</p>
+                    {message.role === "assistant" && message.data?.length ? (
+                      <AssistantCards data={message.data} />
+                    ) : null}
                     {message.files?.length ? (
                       <div className="message-files">
                         {message.files.map((file, index) => (
@@ -418,7 +409,7 @@ function App() {
                         ))}
                       </div>
                     ) : null}
-                    {message.role === "assistant" ? (
+                    {message.role === "assistant" && !message.error ? (
                       <button
                         className="copy-button"
                         aria-label={
@@ -433,6 +424,17 @@ function App() {
                   </div>
                 </article>
               ))}
+              {pendingId === active.id ? (
+                <div className="message message--assistant" role="status">
+                  <div className="message-avatar">
+                    <Mark />
+                  </div>
+                  <div className="message-body">
+                    <div className="message-author">Asistente</div>
+                    <p className="assistant-pending">Preparando tu respuesta…</p>
+                  </div>
+                </div>
+              ) : null}
               <div ref={messageEnd} />
             </div>
           ) : (
@@ -453,29 +455,10 @@ function App() {
             </div>
           )}
           <div className="composer-area">
-            <form className="composer" onSubmit={send}>
+            <form className="composer" onSubmit={(event) => void send(event)}>
               <label className="sr-only" htmlFor="message-input">
                 Escribe tu mensaje
               </label>
-              {files.length ? (
-                <div className="attachment-list">
-                  {files.map((file, index) => (
-                    <span key={`${file.name}-${index}`} className="attachment-chip">
-                      <Icon name="file" size={16} />
-                      {file.name}
-                      <button
-                        type="button"
-                        aria-label={`Quitar ${file.name}`}
-                        onClick={() =>
-                          setFiles((current) => current.filter((_, item) => item !== index))
-                        }
-                      >
-                        <Icon name="close" size={14} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
               <textarea
                 ref={textarea}
                 id="message-input"
@@ -487,40 +470,19 @@ function App() {
                 onKeyDown={onEditorKey}
               />
               <div className="composer-toolbar">
-                <div className="composer-tools">
-                  <button
-                    type="button"
-                    className="icon-button"
-                    aria-label="Adjuntar archivo de texto"
-                    title="Adjuntar .txt o .md (hasta 2 MB)"
-                    onClick={() => fileInput.current?.click()}
-                  >
-                    <Icon name="paperclip" />
-                  </button>
-                  <span className="toolbar-divider" />
-                  <span className="composer-mode">
-                    <Mark />
-                    <span>Asistente personal</span>
-                  </span>
-                </div>
+                <span className="composer-mode">
+                  <Mark />
+                  <span>Asistente personal</span>
+                </span>
                 <button
                   className="send-button btn btn--primary"
                   type="submit"
                   aria-label="Enviar mensaje"
-                  disabled={!draft.trim()}
+                  disabled={!draft.trim() || pendingId !== null}
                 >
                   <Icon name="arrow" size={20} />
                 </button>
               </div>
-              <input
-                className="sr-only"
-                ref={fileInput}
-                type="file"
-                accept=".txt,.md,text/plain,text/markdown"
-                multiple
-                tabIndex={-1}
-                onChange={(event) => void attach(event.target.files)}
-              />
             </form>
             {notice ? (
               <p className="inline-notice" role="status">
@@ -528,47 +490,32 @@ function App() {
               </p>
             ) : null}
             {!active ? (
-              <>
-                <div className="intent-tabs" role="group" aria-label="¿Por dónde empezamos?">
-                  {intents.map((item) => (
-                    <button
-                      type="button"
-                      key={item.label}
-                      className={intent === item.label ? "intent-tab is-selected" : "intent-tab"}
-                      aria-pressed={intent === item.label}
-                      onClick={() => setIntent(item.label)}
-                    >
-                      <Icon name={item.icon} size={17} />
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="suggestions">
-                  {suggestions[intent].map((suggestion, index) => (
-                    <button
-                      type="button"
-                      className="suggestion-card"
-                      key={suggestion.title}
-                      onClick={() => {
-                        setDraft(suggestion.prompt);
-                        textarea.current?.focus();
-                      }}
-                    >
-                      <div className="suggestion-top">
-                        <span className="suggestion-number">0{index + 1}</span>
-                        <Icon name="chevron" size={16} />
-                      </div>
-                      <strong>{suggestion.title}</strong>
-                      <p>{suggestion.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="suggestions" role="group" aria-label="Herramientas disponibles">
+                <h2 className="suggestions-heading">Tools disponibles</h2>
+                {suggestions.map((suggestion) => (
+                  <button
+                    type="button"
+                    className="suggestion-card"
+                    key={suggestion.title}
+                    onClick={() => {
+                      setDraft(suggestion.prompt);
+                      textarea.current?.focus();
+                    }}
+                  >
+                    <div className="suggestion-top">
+                      <code className="suggestion-tool">{suggestion.tool}</code>
+                      <Icon name="chevron" size={16} />
+                    </div>
+                    <strong>{suggestion.title}</strong>
+                    <p>{suggestion.description}</p>
+                  </button>
+                ))}
+              </div>
             ) : null}
             <div className="composer-footer">
               <span>
                 {active
-                  ? "Vista previa · Las respuestas de IA aún no están conectadas."
+                  ? "La IA puede cometer errores. Revisa la información importante."
                   : "A veces, todo empieza con una buena pregunta."}
               </span>
               <span className="enter-hint">
@@ -662,16 +609,17 @@ function App() {
             <Mark large />
           </div>
           <p className="dialog-description">
-            Esta es la interfaz de tu futuro asistente de IA. Puedes escribir, organizar
-            conversaciones y adjuntar notas de texto.
+            Colly te ayuda a consultar notas, hacer cálculos y conocer el clima. Puedes escribir y
+            organizar tus conversaciones.
           </p>
           <div className="preview-explanation">
             <span className="small-status-dot" />
             <div>
-              <strong>Estás en modo de vista previa</strong>
+              <strong>Respuestas con más contexto</strong>
               <p>
-                No hay un modelo de IA conectado. Las respuestas son de demostración y los archivos
-                no se envían a ningún servidor.
+                Las respuestas pueden incluir tarjetas con notas, cálculos y clima. Al enviar un
+                mensaje, su texto se comparte con el servicio de IA. El historial se guarda solo en
+                este navegador.
               </p>
             </div>
           </div>
